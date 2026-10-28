@@ -43,6 +43,35 @@ enum ClaudeHostTests {
         check("Conductor session → Claude Code", ClaudeHost.pillName(hostApp: "com.conductor.app") == "Claude Code")
         check("Claudex host = Open Claudex", ClaudeHost.name(for: "com.laminef.claudex") == "Claudex")
 
+        print("ClaudeHost.sessionURL")
+        let id = "a4cf4431-6aa1-48d1-8eac-a1df6a1b8c9f"
+        check("Claudex opens the session's tab",
+              ClaudeHost.sessionURL(hostBundleId: "com.laminef.claudex", sessionId: id)?.absoluteString
+                == "claudex://session/\(id)")
+        check("other hosts have no session link",
+              ClaudeHost.sessionURL(hostBundleId: "com.apple.Terminal", sessionId: id) == nil)
+        check("no session id → no link", ClaudeHost.sessionURL(hostBundleId: "com.laminef.claudex", sessionId: nil) == nil)
+        check("empty session id → no link", ClaudeHost.sessionURL(hostBundleId: "com.laminef.claudex", sessionId: "") == nil)
+        check("an id with a slash or a query is refused",
+              ClaudeHost.sessionURL(hostBundleId: "com.laminef.claudex", sessionId: "../x?y=1") == nil)
+
+        print("ClaudeHost.sessionInFront")
+        let claudex = "com.laminef.claudex"
+        let shows: (String?) -> (String) -> String? = { content in { _ in content } }
+        check("host in the background → not in front",
+              !ClaudeHost.sessionInFront(hostApp: claudex, frontmost: "com.apple.Terminal", sessionId: id, readVisible: shows(id + "\n")))
+        check("Claudex in front on this session's tab → in front",
+              ClaudeHost.sessionInFront(hostApp: claudex, frontmost: claudex, sessionId: id, readVisible: shows(id + "\n")))
+        check("Claudex in front on another tab → not in front",
+              !ClaudeHost.sessionInFront(hostApp: claudex, frontmost: claudex, sessionId: id, readVisible: shows("other\n")))
+        check("Claudex in front on a tab without a session → not in front",
+              !ClaudeHost.sessionInFront(hostApp: claudex, frontmost: claudex, sessionId: id, readVisible: shows("\n")))
+        check("Claudex without the file → in front, as before",
+              ClaudeHost.sessionInFront(hostApp: claudex, frontmost: claudex, sessionId: id, readVisible: shows(nil)))
+        check("Warp in front → in front, whatever the tab",
+              ClaudeHost.sessionInFront(hostApp: "dev.warp.Warp-Stable", frontmost: "dev.warp.Warp-Stable", sessionId: id, readVisible: shows("other")))
+        check("no host → not in front", !ClaudeHost.sessionInFront(hostApp: nil, frontmost: nil, sessionId: id))
+
         print("ClaudeHost.terminalCardsEnabled")
         UserDefaults.standard.removeObject(forKey: ClaudeHost.terminalCardsKey)
         check("off by default", ClaudeHost.terminalCardsEnabled == false)

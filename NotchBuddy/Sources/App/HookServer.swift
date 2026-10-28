@@ -475,8 +475,10 @@ final class HookServer: @unchecked Sendable {
         // The user is looking at the session's terminal: a finish or an error is already in
         // front of them, so the pill only takes a badge (no sound, no reveal). Warp exposes
         // no active tab, so a sibling session in another tab of the same terminal is quiet too.
-        let terminalInFront = hostApp != nil
-            && NSWorkspace.shared.frontmostApplication?.bundleIdentifier == hostApp
+        // Claudex says which tab is on screen: a session in another tab still rings.
+        let terminalInFront = ClaudeHost.sessionInFront(
+            hostApp: hostApp, frontmost: NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
+            sessionId: sessionId)
         // Several sessions can share one pill (it is chosen from the client, not from the
         // session). The registry tells a turn-ending event whether it may touch the pill,
         // and which session owns the project name shown on it.
@@ -985,7 +987,7 @@ final class HookServer: @unchecked Sendable {
         let recapDecision = ["plan_auto": "allow", "plan_default": "allow", "plan_change": "deny"][decision] ?? decision
         RecapStore.shared.recordDecision(pillId: head.pillId, decision: recapDecision)
         removeApproval(id: head.id, answer: json)
-        if decision == "plan_change" { ClaudeHost.activate(head.hostApp) }
+        if decision == "plan_change" { ClaudeHost.activate(head.hostApp, sessionId: head.sessionId) }
     }
 
     /// The plan's first non-empty line without its Markdown heading marks, for the card.
@@ -1127,7 +1129,10 @@ final class HookServer: @unchecked Sendable {
         let state = AppState.shared
         state.tasks[idx].name = owner.projectName
         if !owner.cwd.isEmpty { state.tasks[idx].sessionCwd = owner.cwd }
-        if pill == "integration_claude" { state.tasks[idx].hostApp = owner.hostApp }
+        if pill == "integration_claude" {
+            state.tasks[idx].hostApp = owner.hostApp
+            state.tasks[idx].sessionId = owner.session
+        }
         if !owner.bundleId.isEmpty { state.tasks[idx].sessionBundleId = owner.bundleId }
     }
 
@@ -1144,7 +1149,10 @@ final class HookServer: @unchecked Sendable {
             guard sessions.ownsDisplay(pill: id, session: session) else { return }
             state.tasks[idx].name = projectName
             if !cwd.isEmpty { state.tasks[idx].sessionCwd = cwd }
-            if id == "integration_claude" { state.tasks[idx].hostApp = hostApp }
+            if id == "integration_claude" {
+                state.tasks[idx].hostApp = hostApp
+                state.tasks[idx].sessionId = session
+            }
             if !bundleId.isEmpty { state.tasks[idx].sessionBundleId = bundleId }
             return
         }
@@ -1154,7 +1162,10 @@ final class HookServer: @unchecked Sendable {
         let source = def?.source ?? .agent
         var task = AgentTask(id: id, name: projectName, color: color,
                              state: .idle, steps: [], source: source, isIntegration: true)
-        if id == "integration_claude" { task.hostApp = hostApp }
+        if id == "integration_claude" {
+            task.hostApp = hostApp
+            task.sessionId = session
+        }
         if !bundleId.isEmpty { task.sessionBundleId = bundleId }
         if let mainIdx = state.tasks.firstIndex(where: { $0.id == state.mainPillId }) {
             state.tasks.insert(task, at: mainIdx + 1)
