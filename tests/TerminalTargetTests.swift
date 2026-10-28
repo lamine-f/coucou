@@ -20,6 +20,13 @@ struct TerminalTargetTests {
         check(!TerminalTarget.knownTerminals.contains("com.conductor.app"),
               "Conductor is not a fallback terminal")
 
+        // Claudex (tmux inside the app, bundle id only) goes back to Claudex
+        check(TerminalTarget.pick(sessionBundleId: "com.laminef.claudex",
+                                  running: ["com.apple.Terminal", "com.laminef.claudex"]) == "com.laminef.claudex",
+              "Claudex session goes back to Claudex")
+        check(!TerminalTarget.knownTerminals.contains("com.laminef.claudex"),
+              "Claudex is not a fallback terminal")
+
         // VS Code integrated terminal goes back to VS Code
         check(TerminalTarget.pick(sessionBundleId: "com.microsoft.VSCode",
                                   running: ["com.microsoft.VSCode", "com.googlecode.iterm2"]) == "com.microsoft.VSCode",

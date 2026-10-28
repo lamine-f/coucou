@@ -65,6 +65,7 @@ Vérifier dans la doc la liste exacte des événements et leurs champs.
 | `TERM_PROGRAM=vscode` | ouvrir le dossier `cwd` dans VS Code ou Cursor (selon `__CFBundleIdentifier`) |
 | Ghostty, Warp, autre | activer l'app |
 | Conductor (`__CFBundleIdentifier=com.conductor.app`, sans `TERM_PROGRAM`) | activer Conductor (pas de lien documenté vers un workspace précis) |
+| Claudex (`__CFBundleIdentifier=com.laminef.claudex`, `TERM_PROGRAM=tmux`) | activer Claudex |
 | rien (app Claude) | activer l'app Claude |
 Demande l'autorisation Automatisation la première fois (normal).
 
