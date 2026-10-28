@@ -6,7 +6,9 @@ import Foundation
 // `vX.Y.Z` with a `Coucou.zip`; Windows, Linux and Android have their own prefixed tags.
 
 enum MacUpdate {
-    static let owner = "Louis-CFM"
+    // Our fork: "New version" looks at the fork's own releases, never at Louis-CFM's, whose
+    // Coucou.zip would replace this build. Upstream changes are merged by hand.
+    static let owner = "lamine-f"
     static let repo = "coucou"
     static let releasesURL = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/releases?per_page=20")!
     /// What the downloaded app must be signed as: Coucou's bundle id, Louis's Developer ID team.
