@@ -613,6 +613,9 @@ final class HookServer: @unchecked Sendable {
             // sound and the idle reset below would land on its work. Its own Stop comes later.
             guard scope == .pill else {
                 nbLog("Stop \(sessionId.prefix(8)) — \(sessions.workingCount(pill: agentId)) session(s) still working on \(agentId)")
+                // Claudex runs several agents side by side behind this one card: each turn
+                // that ends still rings, without touching the card another session is using.
+                if !terminalInFront { SoundEngine.shared.play("finish") }
                 break
             }
             state.updateTask(id: agentId, state: .finished)
